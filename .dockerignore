@@ -1,0 +1,31 @@
+# chei & config
+.env
+.streamlit/secrets.toml
+
+# vector store local
+chroma_store/
+
+# venv & cache
+venv/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# git
+.git/
+.gitignore
+
+# build / dist
+build/
+dist/
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# media temporare
+data/tmp_audio/

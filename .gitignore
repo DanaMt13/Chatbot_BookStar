@@ -1,0 +1,36 @@
+# chei & config
+.env
+.streamlit/secrets.toml
+
+# chroma (vector store local)
+chroma_store/
+
+# virtual env
+venv/
+.venv/
+
+# cache & artefacte Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# build / dist
+build/
+dist/
+*.egg-info/
+
+# jupyter & logs
+.ipynb_checkpoints/
+logs/
+
+# media generate (opțional, le poți muta în /data dacă vrei)
+data/tmp_audio/
+data/tmp_images/
