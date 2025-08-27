@@ -97,6 +97,25 @@ streamlit run ui/app_streamlit.py
 7. *(Opțional)* **STT**: încarcă un fișier sau folosește microfonul (alege limba – ex. „ro” – și motorul; apasă „Transcrie & întreabă”).  
 8. *(Opțional)* **Imagini AI**: generează o copertă sau o scenă pentru cartea recomandată.
 
+<p align="center">
+  <img src="interfata.png" width="720" alt="UI Smart Librarian">
+</p>
+<p align="center">
+  <img src="search_tren.png" width="720" alt="UI Smart Librarian">
+</p>
+<p align="center">
+  <img src="citire_raspuns_audio.png" width="720" alt="UI Smart Librarian">
+</p>
+<p align="center">
+  <img src="audio_inregistrat_voce_eng" width="720" alt="UI Smart Librarian">
+</p>
+<p align="center">
+  <img src="microfon_raspuns.png" width="720" alt="UI Smart Librarian">
+</p>
+<p align="center">
+  <img src="generare_img_chat_tren.png" width="720" alt="UI Smart Librarian">
+</p>
+
 ---
 
 ## ✅ Milestones
@@ -158,3 +177,4 @@ AUDIO_DIR=/tmp/audio
   - `pip install -r requirements.txt`
 
 ---
+
