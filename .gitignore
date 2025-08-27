@@ -21,6 +21,8 @@ __pycache__/
 # OS files
 .DS_Store
 Thumbs.db
+.vscode/
+.idea/
 
 # build / dist
 build/
@@ -34,3 +36,12 @@ logs/
 # media generate (opțional, le poți muta în /data dacă vrei)
 data/tmp_audio/
 data/tmp_images/
+
+# Logs & reports
+*.log
+*.tmp
+*.pid
+coverage.xml
+htmlcov/
+.coverage*
+.pyright/

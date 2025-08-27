@@ -3,13 +3,18 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile.api
+      dockerfile: Dockerfile
     image: smart-librarian-api:latest
     env_file: .env
     environment:
-      - PERSIST_DIR=/app/chroma_store
+      PERSIST_DIR: /app/chroma_store
+    # rulează ca root pentru a evita problemele de permisiuni pe Windows bind-mounts
+    user: "0:0"
+    # IMPORTANT: scoate bind-mount-urile care fac read-only
     volumes:
-      - ./chroma_store:/app/chroma_store
-      - ./:/app
+      - chroma_data:/app/chroma_store
     ports:
-      - "8000:8000"
+      - "8501:8501"
+
+volumes:
+  chroma_data:

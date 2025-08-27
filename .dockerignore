@@ -15,8 +15,11 @@ __pycache__/
 .ruff_cache/
 
 # git
-.git/
+.git
 .gitignore
+.gitattributes
+.vscode
+.idea
 
 # build / dist
 build/

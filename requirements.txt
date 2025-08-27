@@ -1,3 +1,4 @@
+# Core
 openai
 chromadb
 pyyaml
@@ -12,4 +13,3 @@ streamlit-mic-recorder==0.0.8
 fastapi==0.111.0
 uvicorn[standard]==0.29.0
 pydantic==2.7.1
-python-multipart==0.0.9

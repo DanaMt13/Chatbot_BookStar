@@ -315,6 +315,14 @@ with st.sidebar:
     st.markdown("---")
     st.subheader("🎙️ Speech-to-Text (manual)")
     st.radio("Motor STT", ["Offline (0$)", "OpenAI gpt-4o-mini-transcribe (plătit)"], index=0, key="stt_choice_radio")
+    stt_lang = st.selectbox(
+    "Limba audio",
+    ["auto", "ro", "en", "fr", "de", "es", "it", "pt"],
+    index=1,  # ro by default
+    key="stt_lang_sel",
+    help="Forțează limba pentru recunoaștere. 'auto' poate greși pe înregistrări scurte/noisy."
+    )
+
     fwhisper_size = st.selectbox(
         "Model STT offline (faster-whisper)",
         ["tiny", "base", "small"], index=1, key="fwhisper_size_sel",
@@ -498,7 +506,7 @@ else:
         else:
             engine = "offline" if st.session_state.get("stt_choice_radio", "Offline").startswith("Offline") else "openai"
             try:
-                txt, real_dur = transcribe_file(wav_path, engine, client=client, model="gpt-4o-mini-transcribe")
+                txt, real_dur = transcribe_file(wav_path, engine, client=client, model="gpt-4o-mini-transcribe", language=st.session_state.get("stt_lang_sel", "ro"))
                 st.success(f"Transcriere (~{int(real_dur)}s) realizată din microfon.")
                 with st.expander("Text transcris (microfon)"):
                     st.write(txt)
