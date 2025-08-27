@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Smart Librarian — UI (no-install)</title>
+  <!-- Tailwind via CDN (zero install) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Marked: render Markdown (pentru answer_markdown) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root { color-scheme: light; }
+    .card { @apply bg-white border border-neutral-200 rounded-2xl shadow-sm p-5; }
+    .muted { @apply text-sm text-neutral-500; }
+    .mono  { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+  </style>
+</head>
+<body class="bg-neutral-50 text-neutral-900">
+  <div class="max-w-3xl mx-auto px-4 py-8">
+    <header class="mb-6">
+      <h1 class="text-2xl font-semibold">📚 Smart Librarian — RAG + Tool (no-install UI)</h1>
+      <p class="muted">Front-end servit de FastAPI, doar CDN-uri (fără Node/npm). API: <span class="mono">/recommend</span>, <span class="mono">/rag/search</span></p>
+    </header>
+
+    <!-- Form -->
+    <div class="card mb-6">
+      <label for="q" class="block text-sm mb-2">Întrebare (ex: „Vreau o carte despre libertate și magie”)</label>
+      <input id="q" type="text" class="w-full rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+             placeholder="Scrie aici..." />
+      <div class="mt-3 flex items-center gap-2">
+        <button id="askBtn"
+          class="rounded-xl bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          💬 Cere o recomandare
+        </button>
+        <span id="spinner" class="hidden text-sm text-neutral-500">Se procesează…</span>
+      </div>
+    </div>
+
+    <!-- Răspuns -->
+    <div id="answerCard" class="card hidden mb-6">
+      <h2 class="text-lg font-medium mb-2">💡 Răspuns</h2>
+      <div id="answer" class="prose max-w-none"></div>
+    </div>
+
+    <!-- Dovezi RAG -->
+    <div id="evidenceCard" class="card hidden">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-lg font-medium">🧭 Dovezi RAG</h2>
+        <span id="confidenceBadge"
+          class="text-xs rounded-full px-2 py-1 border border-neutral-300 bg-neutral-100"></span>
+      </div>
+      <div id="queryEcho" class="muted mb-3"></div>
+      <ol id="ragList" class="list-decimal pl-6 space-y-2"></ol>
+    </div>
+
+    <footer class="mt-10 text-center muted">
+      Smart Librarian — ChromaDB + OpenAI • UI statică (CDN)
+    </footer>
+  </div>
+
+  <script>
+    const askBtn    = document.getElementById("askBtn");
+    const qInput    = document.getElementById("q");
+    const spinner   = document.getElementById("spinner");
+    const answerCard= document.getElementById("answerCard");
+    const answerEl  = document.getElementById("answer");
+    const evidence  = document.getElementById("evidenceCard");
+    const ragList   = document.getElementById("ragList");
+    const confBadge = document.getElementById("confidenceBadge");
+    const qEcho     = document.getElementById("queryEcho");
+
+    const API_BASE = location.origin; // aceeași origine => no CORS pain
+
+    async function fetchJSON(url, opts={}) {
+      const r = await fetch(url, { headers: { "Content-Type": "application/json" }, ...opts });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }
+
+    function renderMarkdown(md) {
+      try { return marked.parse(md || ""); } catch { return md || ""; }
+    }
+
+    function setLoading(v) {
+      if (v) { askBtn.disabled = true; spinner.classList.remove("hidden"); }
+      else   { askBtn.disabled = false; spinner.classList.add("hidden"); }
+    }
+
+    async function onAsk() {
+      const query = qInput.value.trim();
+      if (!query) { qInput.focus(); return; }
+      setLoading(true);
+
+      // 1) /recommend
+      try {
+        const rec = await fetchJSON(`${API_BASE}/recommend`, {
+          method: "POST",
+          body: JSON.stringify({ query })
+        });
+        const md = rec?.answer_markdown || "(fără răspuns)";
+        answerEl.innerHTML = renderMarkdown(md);
+        answerCard.classList.remove("hidden");
+      } catch (e) {
+        answerCard.classList.remove("hidden");
+        answerEl.innerHTML = `<div class="text-red-600">Eroare /recommend: ${e}</div>`;
+      }
+
+      // 2) /rag/search (opțional; dacă nu există, doar ascundem panelul)
+      try {
+        const ev = await fetchJSON(`${API_BASE}/rag/search?query=` + encodeURIComponent(query) + `&top_k=5`);
+        evidence.classList.remove("hidden");
+        qEcho.textContent = `Caut semantic ca: “${ev?.query || query}”`;
+
+        // badge încredere
+        const conf = ev?.confidence || "Low";
+        confBadge.textContent = `Încredere: ${conf}`;
+
+        // listă top-k
+        ragList.innerHTML = "";
+        (ev?.top_k || []).forEach((item, i) => {
+          const li = document.createElement("li");
+          const dist = (typeof item.distance === "number") ? item.distance.toFixed(4) : item.distance;
+          li.innerHTML = `<div class="font-medium">${item.title} <span class="text-xs text-neutral-500">· dist: ${dist}</span></div>` +
+                         (item.snippet ? `<blockquote class="border-l-4 pl-3 text-neutral-700">${item.snippet}</blockquote>` : "");
+          ragList.appendChild(li);
+        });
+      } catch {
+        // dacă endpointul lipsește/eroare, nu blocăm UI
+        evidence.classList.add("hidden");
+      }
+
+      setLoading(false);
+      qInput.focus();
+    }
+
+    askBtn.addEventListener("click", onAsk);
+    qInput.addEventListener("keydown", (e) => { if (e.key === "Enter") onAsk(); });
+  </script>
+</body>
+</html>

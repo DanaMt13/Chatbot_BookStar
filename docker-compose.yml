@@ -1,10 +1,15 @@
 version: "3.9"
 services:
-  app:
-    build: .
-    image: smart-librarian:latest
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: smart-librarian-api:latest
     env_file: .env
-    ports:
-      - "8501:8501"
+    environment:
+      - PERSIST_DIR=/app/chroma_store
     volumes:
       - ./chroma_store:/app/chroma_store
+      - ./:/app
+    ports:
+      - "8000:8000"

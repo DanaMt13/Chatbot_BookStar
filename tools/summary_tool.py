@@ -1,5 +1,16 @@
 # tools/summary_tool.py
 from typing import Dict, List
+from pathlib import Path
+import yaml
+
+BOOKS_YAML = Path("data/book_summaries.yaml")
+
+def _yaml_raw() -> list[dict]:
+    """Citește YAML-ul canonic ca listă brută (păstrează full_summary)."""
+    if BOOKS_YAML.exists():
+        data = yaml.safe_load(BOOKS_YAML.read_text(encoding="utf-8")) or []
+        return data if isinstance(data, list) else []
+    return []
 
 # Rezumate detaliate (3–6 linii), în RO/EN mix pentru claritate rapidă.
 # Titlurile trebuie să existe și în data/book_summaries.yaml.
@@ -66,27 +77,63 @@ DETAILED_SUMMARIES: Dict[str, str] = {
     ),
 }
 
-def _norm(title: str) -> str:
-    return " ".join(title.strip().lower().split())
+_YAML_CACHE = None
+def _norm(s: str) -> str:
+    return " ".join((s or "").strip().lower().split())
+
+def _yaml_lookup(title: str) -> str | None:
+    global _YAML_CACHE
+    if _YAML_CACHE is None:
+        try:
+            _YAML_CACHE = _yaml_raw()  # citește direct YAML-ul; păstrează full_summary
+        except Exception:
+            _YAML_CACHE = []
+    key = _norm(title)
+    for b in _YAML_CACHE:
+        if _norm(b.get("title", "")) == key:
+            fs = (b.get("full_summary") or b.get("summary") or "").strip()
+            return fs or None
+    return None
+
 
 # index pentru căutare case-insensitive
 _INDEX = {_norm(t): t for t in DETAILED_SUMMARIES.keys()}
 
 def list_titles() -> List[str]:
-    """Returnează lista de titluri disponibile (exacte)."""
-    return list(DETAILED_SUMMARIES.keys())
+    """Returnează lista de titluri disponibile (dicționar intern + YAML), fără dubluri."""
+    titles = list(DETAILED_SUMMARIES.keys())
+    try:
+        y = _YAML_CACHE if _YAML_CACHE is not None else _yaml_raw()
+        titles += [ (b.get("title") or "").strip() for b in y if isinstance(b, dict) and b.get("title") ]
+    except Exception:
+        pass
+    # dedupe (case-insensitive), păstrând ordinea
+    seen, out = set(), []
+    for t in titles:
+        key = (t or "").strip().lower()
+        if t and key not in seen:
+            seen.add(key); out.append(t)
+    return out
 
 def get_summary_by_title(title: str) -> str:
     """
     Returnează rezumatul detaliat pentru un titlu EXACT (case-insensitive).
     Dacă nu găsește, oferă sugestii (containment match).
     """
+    if not (title or "").strip():
+        return "Te rog furnizează un titlu de carte (ex.: '1984', 'The Hobbit')."
+    
     key = _norm(title)
     exact = _INDEX.get(key)
     if exact:
         return DETAILED_SUMMARIES[exact]
 
-    # Sugestii simple (containment) – nu schimbă regula de „exact”, doar ajută UX-ul.
+    # 🔁 Fallback pe YAML canonic
+    y = _yaml_lookup(title)
+    if y:
+        return y
+
+    # Sugestii simple (containment)
     candidates = [t for t in DETAILED_SUMMARIES if key in _norm(t)]
     if candidates:
         return (
@@ -95,6 +142,8 @@ def get_summary_by_title(title: str) -> str:
             + " ?"
         )
     return "Titlul nu a fost găsit în baza locală de rezumate."
+
+
 
 # Schema de tool calling (OpenAI Chat Completions / Responses API)
 TOOL_SPEC = [

@@ -19,7 +19,7 @@ if not OPENAI_API_KEY:
 
 # Embeddings ieftine + Chroma persist
 EMBED_MODEL = "text-embedding-3-small"
-PERSIST_DIR = "chroma_store"
+PERSIST_DIR = os.getenv("PERSIST_DIR", "/tmp/chroma_store")
 
 # Debug opțional
 DEBUG = os.getenv("DEBUG", "0") == "1"
@@ -50,3 +50,11 @@ def _as_float(env_name: str, default: float) -> float:
 
 TTS_RATE = _as_int("TTS_RATE", 170)
 TTS_VOLUME = _as_float("TTS_VOLUME", 0.8)
+
+AUDIO_DIR = os.getenv("AUDIO_DIR", "data/tmp_audio")
+
+# Activează/dezactivează moderarea din .env (1/true/on = activ)
+MODERATION_ENABLED = os.getenv("MODERATION_ENABLED", "1").strip().lower() not in {"0", "false", "no", "off"}
+
+# (opțional) modelul pentru Moderation API; dacă nu-l folosești direct, îl poate citi safety/moderation.py din env
+MODERATION_MODEL = os.getenv("MODERATION_MODEL", "omni-moderation-latest")
