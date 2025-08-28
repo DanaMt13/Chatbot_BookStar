@@ -1,9 +1,16 @@
 # chei & config
 .env
 .streamlit/secrets.toml
+*.secret
+*.secrets
+**/secrets.toml
 
 # chroma (vector store local)
 chroma_store/
+*.sqlite
+*.sqlite3
+*.db
+books.sha1
 
 # virtual env
 venv/
@@ -45,3 +52,21 @@ coverage.xml
 htmlcov/
 .coverage*
 .pyright/
+
+tmp/
+logs/
+**/__pycache__/
+*.pyc
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Build / Docker
+dist/
+build/
+*.egg-info/
+*.log
+docker-compose.override.yml
